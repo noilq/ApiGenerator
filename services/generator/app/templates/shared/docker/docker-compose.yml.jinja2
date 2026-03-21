@@ -1,0 +1,21 @@
+{% from "macros/docker.jinja2" import db_service %}
+
+services:
+  app:
+    build: .
+    container_name: {{ config.project_name | snake_case }}_app
+    ports:
+      - "8010:8000"
+    env_file:
+      - .env
+    {% if db.image %}
+    depends_on:
+      db:
+        condition: service_healthy
+    {% endif %}
+    restart: unless-stopped
+{{ db_service(config, db) }}
+{% if db.image %}
+volumes:
+  db_data:
+{% endif %}

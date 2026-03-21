@@ -1,0 +1,13 @@
+{% macro db_service(config, db) %}
+{% if db.image %}
+  db:
+    image: {{ db.image }}
+    container_name: {{ config.project_name | snake_case }}_db
+    ports:
+      - "{{ db.port }}"
+    volumes:
+      - db_data:{{ db.data_path }}
+{{ healthcheck(db) }}
+    restart: unless-stopped
+{% endif %}
+{% endmacro %}

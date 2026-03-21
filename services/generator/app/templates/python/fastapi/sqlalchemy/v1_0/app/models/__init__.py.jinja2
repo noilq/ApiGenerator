@@ -1,0 +1,9 @@
+{% for table in tables %}
+from app.models.{{ table.name | snake_case }}_model import {{ table.name | pascal_case }}
+{% endfor %}
+
+__all__ = [
+    {% for table in tables %}
+    "{{ table.name | pascal_case }}",
+    {% endfor %}
+]

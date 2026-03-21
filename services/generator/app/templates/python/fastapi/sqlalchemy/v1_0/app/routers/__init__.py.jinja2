@@ -1,0 +1,9 @@
+{% for table in tables %}
+from app.routers.{{ table.name | snake_case }}_router import router as {{ table.name | snake_case }}_router
+{% endfor %}
+
+routers = [
+    {% for table in tables %}
+    {{ table.name | snake_case }}_router,
+    {% endfor %}
+]

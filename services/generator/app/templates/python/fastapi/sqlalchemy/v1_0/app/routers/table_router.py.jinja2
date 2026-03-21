@@ -1,0 +1,43 @@
+from fastapi import APIRouter, Depends, HTTPException
+from sqlalchemy.orm import Session
+
+from app.dependencies import get_db
+from app.schemas.{{ table.name | snake_case }}_schema import {{ table.name | pascal_case }}Create, {{ table.name | pascal_case }}Update, {{ table.name | pascal_case }}Read
+from app.crud.{{ table.name | snake_case }}_crud import (
+    get_{{ table.name | snake_case }},
+    get_{{ table.name | snake_case }}_list,
+    create_{{ table.name | snake_case }},
+    update_{{ table.name | snake_case }},
+    delete_{{ table.name | snake_case }},
+)
+
+{% set pk = table.primary_key[0] if table.primary_key else "id" %}
+
+router = APIRouter(prefix="/{{ table.name | snake_case }}s", tags=["{{ table.name | pascal_case }}"])
+
+@router.get("/", response_model=list[{{ table.name | pascal_case }}Read])
+def list_{{ table.name | snake_case }}s(skip: int = 0, limit: int = 100, db: Session = Depends(get_db)):
+    return get_{{ table.name | snake_case }}_list(db, skip=skip, limit=limit)
+
+@router.get("/{{"{"}}{{ pk }}{{"}"}}", response_model={{ table.name | pascal_case }}Read)
+def read_{{ table.name | snake_case }}({{ pk }}: int, db: Session = Depends(get_db)):
+    obj = get_{{ table.name | snake_case }}(db, {{ pk }})
+    if not obj:
+        raise HTTPException(status_code=404, detail="{{ table.name | pascal_case }} not found")
+    return obj
+
+@router.post("/", response_model={{ table.name | pascal_case }}Read, status_code=201)
+def create(data: {{ table.name | pascal_case }}Create, db: Session = Depends(get_db)):
+    return create_{{ table.name | snake_case }}(db, data)
+
+@router.patch("/{{"{"}}{{ pk }}{{"}"}}", response_model={{ table.name | pascal_case }}Read)
+def update({{ pk }}: int, data: {{ table.name | pascal_case }}Update, db: Session = Depends(get_db)):
+    obj = update_{{ table.name | snake_case }}(db, {{ pk }}, data)
+    if not obj:
+        raise HTTPException(status_code=404, detail="{{ table.name | pascal_case }} not found")
+    return obj
+
+@router.delete("/{{"{"}}{{ pk }}{{"}"}}", status_code=204)
+def delete({{ pk }}: int, db: Session = Depends(get_db)):
+    if not delete_{{ table.name | snake_case }}(db, {{ pk }}):
+        raise HTTPException(status_code=404, detail="{{ table.name | pascal_case }} not found")

@@ -1,0 +1,9 @@
+{% for table in tables %}
+from app.crud.{{ table.name | snake_case }}_crud import (
+    get_{{ table.name | snake_case }},
+    get_{{ table.name | snake_case }}_list,
+    create_{{ table.name | snake_case }},
+    update_{{ table.name | snake_case }},
+    delete_{{ table.name | snake_case }},
+)
+{% endfor %}

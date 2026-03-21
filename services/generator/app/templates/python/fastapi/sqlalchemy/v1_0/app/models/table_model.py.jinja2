@@ -1,0 +1,38 @@
+from sqlalchemy import Column, String, Integer, Float, Boolean, Date, DateTime, Numeric, Text, Enum, ForeignKey
+from sqlalchemy.orm import relationship
+
+from app.database import Base
+
+class {{ table.name | pascal_case }}(Base):
+    __tablename__ = "{{ table.name | snake_case }}"
+    {% if db.supports_schemas and table.schema_name != "public" %}
+    __table_args__ = {"schema": "{{ table.schema_name }}"}
+    {% endif %}
+
+    {% for col in table.columns %}
+    {{ col.name }} = Column(
+        {{ col | to_sqlalchemy_type }}
+        {%- if col.is_primary %}, primary_key=True{% endif %}
+        {%- if col.is_autoincrement %}, autoincrement=True{% endif %}
+        {%- if not col.is_nullable and not col.is_primary %}, nullable=False{% endif %}
+        {%- if col.is_unique %}, unique=True{% endif %}
+        {%- if col.default is not none %}, default={{ col.default }}{% endif %}
+        {%- for fk in table.foreign_keys if fk.constrained_columns == [col.name] %}
+        {%- if fk.referred_columns %}
+        , ForeignKey("{{ fk.referred_table | snake_case }}.{{ fk.referred_columns[0] }}")
+        {%- else %}
+        , ForeignKey("{{ fk.referred_table | snake_case }}")
+        {%- endif %}
+        {%- endfor %}
+    )
+    {% endfor %}
+
+    {% for fk in table.foreign_keys %}
+    {{ fk.referred_table | snake_case }} = relationship(
+        "{{ fk.referred_table | pascal_case }}",
+        backref="{{ table.name | snake_case }}_list"
+    )
+    {% endfor %}
+
+    def __repr__(self):
+        return f"<{{ table.name | pascal_case }} {{ table.primary_key[0] if table.primary_key else 'id' }}={self.{{ table.primary_key[0] if table.primary_key else 'id' }}}>"

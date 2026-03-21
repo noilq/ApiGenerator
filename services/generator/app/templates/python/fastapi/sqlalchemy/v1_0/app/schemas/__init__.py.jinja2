@@ -1,0 +1,17 @@
+{% for table in tables %}
+from app.schemas.{{ table.name | snake_case }}_schema import (
+    {{ table.name | pascal_case }}Base,
+    {{ table.name | pascal_case }}Create,
+    {{ table.name | pascal_case }}Update,
+    {{ table.name | pascal_case }}Read,
+)
+{% endfor %}
+
+__all__ = [
+    {% for table in tables %}
+    "{{ table.name | pascal_case }}Base",
+    "{{ table.name | pascal_case }}Create",
+    "{{ table.name | pascal_case }}Update",
+    "{{ table.name | pascal_case }}Read",
+    {% endfor %}
+]

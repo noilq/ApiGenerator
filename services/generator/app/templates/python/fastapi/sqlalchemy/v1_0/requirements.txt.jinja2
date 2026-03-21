@@ -1,0 +1,13 @@
+fastapi
+uvicorn[standard]
+sqlalchemy
+pydantic
+pydantic-settings
+psycopg2-binary
+{% if config.auth.enabled %}
+python-jose[cryptography]
+passlib[bcrypt]
+{% endif %}
+{% if db.driver %}
+{{ db.driver }}
+{% endif %}

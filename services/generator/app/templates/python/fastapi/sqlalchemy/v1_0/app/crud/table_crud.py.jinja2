@@ -1,0 +1,53 @@
+from sqlalchemy.orm import Session
+from sqlalchemy.exc import SQLAlchemyError
+
+from app.models.{{ table.name | snake_case }}_model import {{ table.name | pascal_case }}
+from app.schemas.{{ table.name | snake_case }}_schema import {{ table.name | pascal_case }}Create, {{ table.name | pascal_case }}Update
+
+{% set pk = table.primary_key[0] if table.primary_key else "id" %}
+
+def get_{{ table.name | snake_case }}(db: Session, {{ pk }}: int) -> {{ table.name | pascal_case }} | None:
+    return db.query({{ table.name | pascal_case }}).filter({{ table.name | pascal_case }}.{{ pk }} == {{ pk }}).first()
+
+def get_{{ table.name | snake_case }}_list(db: Session, skip: int = 0, limit: int = 100) -> list[{{ table.name | pascal_case }}]:
+    return db.query({{ table.name | pascal_case }}).offset(skip).limit(limit).all()
+
+def create_{{ table.name | snake_case }}(db: Session, data: {{ table.name | pascal_case }}Create) -> {{ table.name | pascal_case }}:
+    obj = {{ table.name | pascal_case }}(**data.model_dump())
+    db.add(obj)
+    try:
+        db.flush()
+        db.commit()
+        db.refresh(obj)
+        return obj
+    except SQLAlchemyError:
+        db.rollback()
+        raise
+
+def update_{{ table.name | snake_case }}(db: Session, {{ pk }}: int, data: {{ table.name | pascal_case }}Update) -> {{ table.name | pascal_case }} | None:
+    obj = get_{{ table.name | snake_case }}(db, {{ pk }})
+    if not obj:
+        return None
+    for field, value in data.model_dump(exclude_unset=True).items():
+        setattr(obj, field, value)
+    try:
+        db.flush()
+        db.commit()
+        db.refresh(obj)
+        return obj
+    except SQLAlchemyError:
+        db.rollback()
+        raise
+
+def delete_{{ table.name | snake_case }}(db: Session, {{ pk }}: int) -> bool:
+    obj = get_{{ table.name | snake_case }}(db, {{ pk }})
+    if not obj:
+        return False
+    db.delete(obj)
+    try:
+        db.flush()
+        db.commit()
+        return True
+    except SQLAlchemyError:
+        db.rollback()
+        raise

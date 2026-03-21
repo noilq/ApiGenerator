@@ -1,0 +1,7 @@
+{% macro python_type(col) %}
+{%- if col.type == "enum" and col.comment -%}
+Literal[{{ col.comment | enum_values }}]
+{%- else -%}
+{{ col.type | to_python_type }}
+{%- endif -%}
+{% endmacro %}

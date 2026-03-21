@@ -1,0 +1,22 @@
+# {{ config.project_name }}
+
+Auto-generated FastAPI + SQLAlchemy project.
+
+## Setup
+
+1. Copy `.env.example` to `.env` and fill in the values
+2. Install dependencies: `pip install -r requirements.txt`
+3. Run the app: `uvicorn app.main:app --reload`
+
+{% if config.docker %}
+## Docker
+```bash
+docker compose up --build
+```
+{% endif %}
+
+## Endpoints
+
+{% for table in tables %}
+- `/api/v1/{{ table.name | snake_case }}s` — CRUD for {{ table.name | pascal_case }}
+{% endfor %}

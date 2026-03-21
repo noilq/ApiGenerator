@@ -1,0 +1,42 @@
+services:
+  gateway:
+    environment:
+      - PYTHONDONTWRITEBYTECODE=1
+    volumes:
+      - ./services/gateway/app:/app/app
+    command: uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload --reload-dir /app/app
+
+  ingestion:
+    environment:
+      - PYTHONDONTWRITEBYTECODE=1
+    volumes:
+      - ./shared:/app/shared
+      - ./services/ingestion/app:/app/app
+      - ./services/ingestion/tests:/app/tests
+    command: uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
+
+  normalizer:
+    environment:
+      - PYTHONDONTWRITEBYTECODE=1
+    volumes:
+      - ./shared:/app/shared
+      - ./services/normalizer/app:/app/app
+      - ./services/normalizer/tests:/app/tests
+    command: uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
+
+  generator:
+    environment:
+      - PYTHONDONTWRITEBYTECODE=1
+    volumes:
+      - ./shared:/app/shared
+      - ./services/generator/app:/app/app
+      - ./services/ingestion/tests:/app/tests
+      - ./services/ingestion/tests:/app/templates
+    command: uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
+
+  exporter:
+    environment:
+      - PYTHONDONTWRITEBYTECODE=1
+    volumes:
+      - ./services/exporter/app:/app/app
+    command: uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload --reload-dir /app/app

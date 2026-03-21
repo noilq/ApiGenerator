@@ -1,0 +1,59 @@
+services:
+  gateway:
+    build: ./services/gateway
+    ports:
+      - "8000:8000"
+    environment:
+      - INGESTOR_URL=http://ingestion:8000/ingest
+      - NORMALIZER_URL=http://normalizer:8000/normalize
+      - GENERATOR_URL=http://generator:8000/generate
+      - EXPORTER_URL=http://exporter:8000/export
+      - PYTHONUNBUFFERED=1
+    depends_on:
+      - ingestion
+      - normalizer
+      - generator
+      - exporter
+    volumes:
+      - generated_projects:/app/generated_projects
+    command: uvicorn app.main:app --host 0.0.0.0 --port 8000
+
+  ingestion:
+    build: ./services/ingestion
+    ports:
+      - "8001:8000"
+    depends_on:
+      - normalizer
+      - generator
+    environment:
+      - PYTHONUNBUFFERED=1
+    command: uvicorn app.main:app --host 0.0.0.0 --port 8000
+
+  normalizer:
+    build: ./services/normalizer
+    ports:
+      - "8002:8000"
+    environment:
+      - PYTHONUNBUFFERED=1
+    command: uvicorn app.main:app --host 0.0.0.0 --port 8000
+
+  generator:
+    build: ./services/generator
+    ports:
+      - "8003:8000"
+    environment:
+      - PYTHONUNBUFFERED=1
+    command: uvicorn app.main:app --host 0.0.0.0 --port 8000
+
+  exporter:
+    build: ./services/exporter
+    ports:
+      - "8004:8000"
+    volumes:
+      - generated_projects:/app/generated_projects
+    environment:
+      - PYTHONUNBUFFERED=1
+    command: uvicorn app.main:app --host 0.0.0.0 --port 8000
+
+volumes:
+  generated_projects:
