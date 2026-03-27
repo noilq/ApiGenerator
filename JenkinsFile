@@ -1,0 +1,51 @@
+pipeline {
+    agent any
+
+    stages {
+        stage('Clone') {
+            steps {
+                git 'https://github.com/noilq/ApiGenerator.git'
+            }
+        }
+        stage('Copy shared folders') {
+            steps {
+                sh 'cp -r shared services/ingestion/'
+                sh 'cp -r shared services/normalizer/'
+                sh 'cp -r shared services/generator/'
+            }
+        }
+        stage('Build') {
+            steps {
+                sh 'docker compose -f docker-compose.yml up --build -d'
+            }
+        }
+        stage('Test') {
+            steps {
+                script {
+                    try {
+                        sh 'docker compose exec -T ingestion python3 -m pytest /app/tests/ --junitxml=/app/results/ingestion-results.xml'
+                        sh 'docker compose exec -T normalizer python3 -m pytest /app/tests/ --junitxml=/app/results/normalizer-results.xml'
+                    } catch (e) {
+                        echo 'Error while conducting test: ${e.getMessage()}'
+                        currentBuild.result = 'FAILURE'
+                    } finally {
+                        sh 'docker compose cp ingestion:/app/results/ingestion-results.xml ingestion-results.xml || touch ingestion-results.xml'
+                        sh 'docker compose cp normalizer:/app/results/normalizer-results.xml normalizer-results.xml || touch normalizer-results.xml'
+                    }
+                }
+            }
+        }
+    }
+    post {
+        always {
+            junit '**/ingestion-results.xml, **/normalizer-results.xml'
+            sh 'docker compose down'
+        }
+        success {
+            echo 'Tests passed'
+        }
+        failure {
+            echo 'Tests failed'
+        }
+    }
+}

@@ -30,8 +30,8 @@ services:
     volumes:
       - ./shared:/app/shared
       - ./services/generator/app:/app/app
-      - ./services/ingestion/tests:/app/tests
-      - ./services/ingestion/tests:/app/templates
+      - ./services/generator/tests:/app/tests
+      - ./services/generator/tests:/app/templates
     command: uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
 
   exporter:
